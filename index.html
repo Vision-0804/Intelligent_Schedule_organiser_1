@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Scheduler</title>
+    <style>
+        /* Style CSS */
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: #343a40;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form input[type="datetime-local"],
+        form input[type="time"],
+        form select,
+        form textarea {
+            width: calc(100% - 22px); /* Account for padding and border */
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        form textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        form button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        form button:hover {
+            background-color: #0056b3;
+        }
+
+        #daily-schedule, #fixed-blocks-list, #pending-tasks-list, #all-tasks-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .schedule-item, .fixed-block-item, .task-item {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        /* Specific styling for schedule item types */
+        .schedule-item-task { background-color: #e6f7ff; border-left: 5px solid #2196f3; } /* Light blue */
+        .schedule-item-break { background-color: #fff3e0; border-left: 5px solid #ff9800; } /* Light orange */
+        .schedule-item-revision { background-color: #e8f5e9; border-left: 5px solid #4caf50; } /* Light green */
+        .schedule-item-fixed-block { background-color: #ffebee; border-left: 5px solid #f44336; } /* Light red */
+
+        .schedule-item strong {
+            color: #333;
+        }
+        
+        .schedule-item button, .task-item button, .fixed-block-item button {
+            background-color: #28a745; /* Green for complete */
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        
+        .schedule-item button:hover, .task-item button:hover, .fixed-block-item button:hover {
+            background-color: #218838;
+        }
+        
+        .task-item button.delete-btn, .fixed-block-item button.delete-btn {
+            background-color: #dc3545; /* Red for delete */
+        }
+        .task-item button.delete-btn:hover, .fixed-block-item button.delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Styles for the timer display */
+        #task-timer-display {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #343a40;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            font-size: 1.1rem;
+            z-index: 1000;
+        }
+        #task-timer-display h2 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+        #task-timer-display button {
+            width: auto;
+            margin-top: 10px;
+            background-color: #dc3545;
+            padding: 8px 15px;
+        }
+        #task-timer-display button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Personal Scheduler</h1>
+        </header>
+
+        <main>
+            <section>
+                <h2>Today's Schedule</h2>
+                <h3 id="current-date"></h3>
+                <ul id="daily-schedule">
+                    </ul>
+            </section>
+
+            <section>
+                <h2>Add New Task</h2>
+                <form id="task-form">
+                    <label for="task-name">Task Name:</label>
+                    <input type="text" id="task-name" required>
+
+                    <label for="task-description">Description:</label>
+                    <textarea id="task-description"></textarea>
+
+                    <label for="task-priority">Priority:</label>
+                    <select id="task-priority" required>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="LOW">Low</option>
+                    </select>
+
+                    <label for="task-deadline">Deadline:</label>
+                    <input type="datetime-local" id="task-deadline" required>
+                    
+                    <label for="task-estimated-time">Estimated Time (minutes):</label>
+                    <input type="number" id="task-estimated-time" required>
+
+                    <label for="task-type">Task Type:</label>
+                    <select id="task-type" required>
+                        <option value="HOMEWORK">Homework</option>
+                        <option value="ASSIGNMENT">Assignment</option>
+                        <option value="PROJECT">Project</option>
+                        <option value="STUDY">Study</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+
+                    <button type="submit">Add Task</button>
+                </form>
+            </section>
+
+            <section>
+                <h2>Add Fixed Block</h2>
+                <form id="fixed-block-form">
+                    <label for="fb-day">Day:</label>
+                    <select id="fb-day" required>
+                        <option value="ALL_DAYS">Every Day</option>
+                        <option value="MONDAY">Monday</option>
+                        <option value="TUESDAY">Tuesday</option>
+                        <option value="WEDNESDAY">Wednesday</option>
+                        <option value="THURSDAY">Thursday</option>
+                        <option value="FRIDAY">Friday</option>
+                        <option value="SATURDAY">Saturday</option>
+                        <option value="SUNDAY">Sunday</option>
+                    </select>
+
+                    <label for="fb-description">Description:</label>
+                    <input type="text" id="fb-description" required>
+
+                    <label for="fb-start-time">Start Time:</label>
+                    <input type="time" id="fb-start-time" required>
+
+                    <label for="fb-end-time">End Time:</label>
+                    <input type="time" id="fb-end-time" required>
+
+                    <button type="submit">Add Fixed Block</button>
+                </form>
+            </section>
+
+            <section>
+                <h3>Fixed Blocks</h3>
+                <ul id="fixed-blocks-list">
+                    </ul>
+            </section>
+
+            <section id="pending-tasks-section">
+                <h3>Pending Tasks</h3>
+                <button id="view-all-tasks-btn">View All Tasks</button>
+                <ul id="pending-tasks-list">
+                    </ul>
+            </section>
+
+            <section id="all-tasks-section" style="display: none;">
+                <h3>All Tasks (Pending & Completed)</h3>
+                <ul id="all-tasks-list">
+                    </ul>
+            </section>
+        </main>
+    </div>
+    
+    <div id="task-timer-display" style="display: none;">
+        </div>
+    
+    <script src="Scheduler.js"></script>
+    <script src="App.js"></script>
+</body>
+</html>
